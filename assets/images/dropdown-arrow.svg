@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 51.3 (57544) - http://www.bohemiancoding.com/sketch -->
+    <title>icon/Control/AccordionOpen24</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="icon/Control/AccordionOpen24" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="bounding-box" x="0" y="0" width="24" height="24"></rect>
+        <g id="iconAccordionExpand" transform="translate(4.000000, 7.000000)" fill="#4F4C4D">
+            <polygon id="Expand" points="1.33102453 0 7.91925982 7 14.5074951 0 15.8385196 1.41421356 7.91925982 9.82842712 0 1.41421356"></polygon>
+        </g>
+    </g>
+</svg>
