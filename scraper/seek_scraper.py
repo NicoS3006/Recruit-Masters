@@ -1,90 +1,61 @@
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
 import json
-import os
-import time
+import asyncio
+from pathlib import Path
+from playwright.async_api import async_playwright
 
+OUTPUT_FILE = Path("jobs.json")
 BASE_URL = "https://www.seek.com.au/Recruit-Masters-jobs/at-this-company"
-OUTPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../assets/js/jobs.json'))
-SCREENSHOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../debug_seek.png'))
 
-def scroll_and_click_jobs(driver):
-    print("📜 Scrolling to load job cards...")
-    last_height = driver.execute_script("return document.body.scrollHeight")
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        if new_height == last_height:
-            break
-        last_height = new_height
 
-    print("🧠 Attempting to click each job card...")
-    job_links = driver.find_elements(By.CSS_SELECTOR, 'a[data-automation="jobTitle"]')
-    for link in job_links:
-        try:
-            driver.execute_script("arguments[0].scrollIntoView(true);", link)
-            driver.execute_script("arguments[0].click();", link)
-            time.sleep(2)
-        except Exception as e:
-            print("⚠️ Could not click job card:", e)
+async def run():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
 
-def scrape_seek_jobs():
-    options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
+        await page.goto(BASE_URL)
+        print("✅ Loaded page")
 
-    profile_path = os.path.abspath("selenium_profile")
-    driver = uc.Chrome(user_data_dir=profile_path, options=options, headless=False)
+        # Scroll down to load all jobs
+        for _ in range(10):
+            await page.mouse.wheel(0, 1000)
+            await asyncio.sleep(1)
 
-    print("🌐 Navigating to Seek...")
-    driver.get(BASE_URL)
+        job_cards = await page.locator('article[data-automation="job-card"]').all()
+        print(f"🔍 Found {len(job_cards)} job cards")
 
-    try:
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'article[data-automation="job-card"]'))
-        )
-    except Exception:
-        print("❌ Job cards did not load in time.")
-        driver.save_screenshot(SCREENSHOT_PATH)
-        driver.quit()
-        return
+        jobs = []
 
-    scroll_and_click_jobs(driver)
+        for i, card in enumerate(job_cards):
+            try:
+                await card.click()
+                await page.wait_for_selector('[data-automation="job-detail-title"]', timeout=5000)
+                await asyncio.sleep(1.5)
 
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    job_cards = soup.select('article[data-automation="job-card"]')
+                title = await page.locator('[data-automation="job-detail-title"]').text_content()
+                location = await page.locator('[data-automation="job-detail-location"]').text_content()
+                date = await page.locator('[data-automation="jobListingDate"]').text_content()
+                description = await page.locator('[data-automation="jobAdDetails"]').text_content()
 
-    print(f"🔍 Found {len(job_cards)} job cards")
+                job = {
+                    "title": title.strip() if title else "",
+                    "location": location.strip() if location else "",
+                    "date": date.strip() if date else "",
+                    "summary": description.strip()[:300] + "..."
+                }
 
-    jobs = []
-    for card in job_cards:
-        title_tag = card.select_one('a[data-automation="jobTitle"]')
-        location_tag = card.select_one('[data-automation="job-detail-location"]')
-        summary_tag = card.select_one('span[data-automation="jobShortDescription"]')
-        date_tag = card.select_one('span[data-automation="jobListingDate"]')
+                jobs.append(job)
+                print(f"✅ Scraped job {i+1}/{len(job_cards)}")
 
-        if not title_tag:
-            continue
+            except Exception as e:
+                print(f"⚠️ Failed on job {i+1}: {e}")
 
-        jobs.append({
-            "title": title_tag.get_text(strip=True),
-            "link": f"https://www.seek.com.au{title_tag['href']}",
-            "location": location_tag.get_text(strip=True) if location_tag else "N/A",
-            "summary": summary_tag.get_text(strip=True) if summary_tag else "",
-            "date": date_tag.get_text(strip=True) if date_tag else ""
-        })
+        await browser.close()
 
-    with open(OUTPUT_PATH, 'w') as f:
-        json.dump(jobs, f, indent=2)
+        with open(OUTPUT_FILE, "w") as f:
+            json.dump(jobs, f, indent=2)
+        print(f"📝 Saved {len(jobs)} jobs to jobs.json")
 
-    print(f"✅ Saved {len(jobs)} jobs to jobs.json")
-    driver.save_screenshot(SCREENSHOT_PATH)
-    driver.quit()
 
 if __name__ == "__main__":
-    scrape_seek_jobs()
+    asyncio.run(run())
