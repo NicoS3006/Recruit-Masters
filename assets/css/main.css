@@ -2528,7 +2528,7 @@ figcaption {
 .heading-style-h1 {
   letter-spacing: -.02em;
   margin-bottom: 1rem;
-  font-size: 8rem;
+  font-size: 6rem;
   font-weight: 500;
   line-height: 1;
 }
@@ -2830,7 +2830,6 @@ figcaption {
 
 .padding-section-large {
   padding-top: 7rem;
-  padding-bottom: 7rem;
 }
 
 .padding-section-large.no-padding-top {
@@ -3085,7 +3084,7 @@ figcaption {
 .overview_component {
   z-index: 1;
   margin-top: -20vh;
-  padding-top: 3.125rem;
+  padding-top: 2rem;
   position: relative;
 }
 

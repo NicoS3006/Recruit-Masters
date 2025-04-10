@@ -8,7 +8,7 @@ BASE_URL = "https://www.seek.com.au/Recruit-Masters-jobs/at-this-company"
 
 async def run():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
 
@@ -38,17 +38,15 @@ async def run():
                 job_page = await context.new_page()
                 await job_page.goto(full_url, timeout=20000)
 
-                # Wait for job title
                 await job_page.wait_for_selector('h1[data-automation="job-detail-title"]', timeout=10000)
                 await job_page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 await asyncio.sleep(1)
 
-                # Extract required fields
                 title = await job_page.locator('h1[data-automation="job-detail-title"]').inner_text()
                 location = await job_page.locator('[data-automation="job-detail-location"]').inner_text()
                 description = await job_page.locator('div[data-automation="jobAdDetails"]').inner_text()
 
-                # Date posted from the header
+                # Fallback for date posted
                 try:
                     date_posted = await job_page.locator('span:below(button:has-text("Quick apply"))').inner_text()
                 except:
@@ -58,7 +56,7 @@ async def run():
                     except:
                         date_posted = "Unknown"
 
-                # Job type
+                # Fallback for job type
                 try:
                     job_type = await job_page.locator('[data-automation="job-detail-work-type"]').inner_text()
                 except:
@@ -67,7 +65,7 @@ async def run():
                     except:
                         job_type = "Unknown"
 
-                # Pay
+                # Fallback for salary
                 try:
                     salary = await job_page.locator('[data-automation="job-detail-salary"]').inner_text()
                 except:
@@ -76,14 +74,13 @@ async def run():
                     except:
                         salary = "Not listed"
 
-                # ✅ Append all job data including the URL
                 jobs.append({
-                    "title": title,
-                    "location": location,
-                    "date_posted": date_posted,
-                    "job_type": job_type,
-                    "pay": salary,
-                    "summary": description,
+                    "title": title.strip(),
+                    "location": location.strip(),
+                    "date_posted": date_posted.strip(),
+                    "job_type": job_type.strip(),
+                    "pay": salary.strip(),
+                    "summary": description.strip(),
                     "url": full_url
                 })
 
@@ -97,7 +94,14 @@ async def run():
                 await asyncio.sleep(1)
 
         await browser.close()
-        OUTPUT_FILE.write_text(json.dumps(jobs, indent=2))
+
+        # Optional: sort by title to reduce Git diff noise
+        jobs.sort(key=lambda x: x.get("title", "").lower())
+
+        OUTPUT_FILE.write_text(
+            json.dumps(jobs, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
         print(f"📁 Saved {len(jobs)} jobs to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
