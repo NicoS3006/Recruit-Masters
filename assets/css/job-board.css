@@ -174,3 +174,21 @@
 .formatted-summary p {
   margin: 0.5rem 0;
 }
+.toggle-summary {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  font-size: 0.875rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.toggle-summary:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}

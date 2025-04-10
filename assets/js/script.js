@@ -10,6 +10,7 @@ class JobBoard {
     await this.fetchJobs();
     this.setupFilters();
     this.renderJobs();
+    this.setupExpandListeners();
   }
 
   async fetchJobs() {
@@ -57,6 +58,7 @@ class JobBoard {
       });
 
     this.renderJobs();
+    this.setupExpandListeners();
   }
 
   renderJobs() {
@@ -65,17 +67,16 @@ class JobBoard {
       const card = this.createJobCard(job, index);
       this.jobListings.insertAdjacentHTML('beforeend', card);
     });
-
-    this.addToggleListeners();
   }
 
   createJobCard(job, index) {
     const posted = this.formatDate(job.date_posted);
-    const summaryHTML = this.formatSummaryHTML(job.summary);
+    const fullSummaryHTML = this.formatSummaryHTML(job.summary);
+    const collapsedSummaryHTML = this.generateFallbackPreview(fullSummaryHTML);
     const pay = job.pay && job.pay !== 'Not listed' ? `<div class="job-pay">💰 ${job.pay}</div>` : '';
-
+  
     return `
-      <div class="job-card">
+      <div class="job-card collapsed" id="job-card-${index}">
         <div class="job-card-header">
           <h3 class="heading-style-h4">${job.title}</h3>
           <div class="job-card-meta">
@@ -87,10 +88,11 @@ class JobBoard {
           <div class="job-type-tag">💼 ${job.job_type}</div>
           ${pay}
         </div>
-        <div id="summary-${index}" class="job-summary formatted-summary text-size-medium text-color-secondary collapsed">
-          ${summaryHTML}
+        <div class="job-summary formatted-summary text-size-medium text-color-secondary">
+          <div class="summary-collapsed">${collapsedSummaryHTML}</div>
+          <div class="summary-full" style="display: none;">${fullSummaryHTML}</div>
         </div>
-        <button class="toggle-summary" data-target="summary-${index}">View more</button>
+        <button class="toggle-summary" data-target="job-card-${index}">View more</button>
         <div class="job-card-actions">
           <a href="${job.url || '/contact'}" target="_blank" class="button-link-navbar">
             <div>Quick Apply</div>
@@ -101,15 +103,32 @@ class JobBoard {
       </div>
     `;
   }
+  
+  generateFallbackPreview(html) {
+    // Use only the first paragraph or first 300 characters as fallback
+    const firstParagraph = html.match(/<p>(.*?)<\/p>/);
+    if (firstParagraph && firstParagraph[0]) return firstParagraph[0];
+  
+    // Otherwise fallback to trimming raw text
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const text = div.innerText.trim().slice(0, 300);
+    return `<p>${text}...</p>`;
+  }  
 
-  addToggleListeners() {
-    const buttons = document.querySelectorAll('.toggle-summary');
-    buttons.forEach(btn => {
+  setupExpandListeners() {
+    document.querySelectorAll('.toggle-summary').forEach(btn => {
       btn.addEventListener('click', () => {
-        const target = document.getElementById(btn.dataset.target);
-        const expanded = target.classList.toggle('expanded');
-        target.classList.toggle('collapsed');
-        btn.textContent = expanded ? 'View less' : 'View more';
+        const targetId = btn.dataset.target;
+        const card = document.getElementById(targetId);
+        const full = card.querySelector('.summary-full');
+        const collapsed = card.querySelector('.summary-collapsed');
+
+        const isExpanded = card.classList.toggle('expanded');
+        card.classList.toggle('collapsed', !isExpanded);
+        full.style.display = isExpanded ? 'block' : 'none';
+        collapsed.style.display = isExpanded ? 'none' : 'block';
+        btn.textContent = isExpanded ? 'View less' : 'View more';
       });
     });
   }
@@ -188,6 +207,15 @@ class JobBoard {
 
     if (insideList) html += '</ul>';
     return html;
+  }
+
+  extractSectionHTML(html, startHeading) {
+    const start = html.indexOf(`<h4>${startHeading}`);
+    if (start === -1) return html;
+
+    const remaining = html.slice(start);
+    const nextHeadingIndex = remaining.indexOf('<h4>', 4);
+    return nextHeadingIndex !== -1 ? remaining.slice(0, nextHeadingIndex) : remaining;
   }
 }
 
