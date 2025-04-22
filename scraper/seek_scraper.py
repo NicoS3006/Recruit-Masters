@@ -20,7 +20,8 @@ async def run():
             await page.mouse.wheel(0, 2000)
             await asyncio.sleep(1)
 
-        await page.wait_for_selector('a[data-automation="jobTitle"]', timeout=10000)
+        await page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
+        await page.wait_for_selector('a[data-automation="jobTitle"]', timeout=30000)
         job_links = await page.locator('a[data-automation="jobTitle"]').all()
         print(f"🔗 Found {len(job_links)} job links")
 
