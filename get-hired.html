@@ -379,8 +379,7 @@
                         <div class="testimonial_content">
                           <h3 class="testimonial_text">
                             “The team at Recruit Master is absolutely amazing! Everyone in the office is professional and
-                            the amount of knowledge they have between all of them is astounding. If you are looking to job
-                            opportunity or just have some general questions they are the team to go to. They will guarantee
+                            the amount of knowledge they have between all of them is astounding ... They will guarantee
                             that you are happy and feel secure.”
                           </h3>
                           <div class="margin-top margin-medium">
@@ -972,5 +971,34 @@
       src="assets/js/main.js"
       type="text/javascript"
     ></script>
+    <script>
+      function triggerScrollRerender() {
+        window.scrollBy(0, 1); // slight nudge
+        window.scrollBy(0, -1);
+      }
+    
+      function patchSlideFive() {
+        const slides = [...document.querySelectorAll('.testimonial_slide')];
+        const slide5 = slides.find(slide => slide.getAttribute('aria-label')?.includes('5 of'));
+        if (!slide5) return;
+    
+        const text = slide5.querySelector('.testimonial_text');
+        if (text && text.style.opacity !== '1') {
+          text.style.opacity = '1';
+          text.style.visibility = 'visible';
+          text.style.display = 'block';
+          console.log('✅ Slide 5 text patched successfully.');
+        }
+      }
+    
+      document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('click', () => {
+          setTimeout(() => {
+            triggerScrollRerender();
+            patchSlideFive();
+          }, 400);
+        });
+      });
+    </script>    
   </body>
 </html>
