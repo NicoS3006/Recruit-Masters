@@ -10,30 +10,55 @@ async def run():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
+
+        # Anti-bot spoofing headers
+        await context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        """)
+        await context.set_extra_http_headers({
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9"
+        })
+
         page = await context.new_page()
 
-        await page.goto(BASE_URL)
-        await page.wait_for_load_state("networkidle")
-        print("✅ Page loaded")
+        # Robust load with retries
+        for attempt in range(3):
+            try:
+                print(f"🌐 Navigating to: {BASE_URL} (Attempt {attempt+1})")
+                await page.goto(BASE_URL, wait_until="domcontentloaded", timeout=30000)
+                print("✅ Page loaded")
+                break
+            except Exception as e:
+                print(f"⚠️ Attempt {attempt+1} failed: {e}")
+                if attempt == 2:
+                    await page.screenshot(path="debug_seek_page.png", full_page=True)
+                    print("📸 Saved screenshot for debugging as 'debug_seek_page.png'")
+                    return
+                await asyncio.sleep(3)
 
-        # Scroll to load more job cards
-        for _ in range(6):
-            await page.mouse.wheel(0, 2000)
-            await asyncio.sleep(1)
+        # Scroll more aggressively
+        for _ in range(10):
+            await page.mouse.wheel(0, 1000)
+            await asyncio.sleep(0.5)
+        await asyncio.sleep(5)  # allow rendering
 
-        await page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
-        await asyncio.sleep(2)
-
-        # Primary selector fallback logic
+        # Try jobTitle selector first, fallback to article a
+        job_links = []
         try:
             await page.wait_for_selector('a[data-automation="jobTitle"]', timeout=10000)
             job_links = await page.locator('a[data-automation="jobTitle"]').all()
         except TimeoutError:
             print("⚠️ Primary selector failed. Trying fallback selector.")
-            await page.screenshot(path="debug_seek_page.png")
-            print("📸 Saved screenshot for debugging as 'debug_seek_page.png'")
-            await page.wait_for_selector('article a', timeout=10000)
-            job_links = await page.locator('article a').all()
+            await page.screenshot(path="debug_seek_jobs_fallback.png", full_page=True)
+            try:
+                await page.wait_for_selector('article a', timeout=10000)
+                job_links = await page.locator('article a').all()
+            except TimeoutError:
+                await page.screenshot(path="debug_seek_jobs_failed.png", full_page=True)
+                print("❌ No job links found at all. Screenshot saved to 'debug_seek_jobs_failed.png'")
+                await browser.close()
+                return
 
         print(f"🔗 Found {len(job_links)} job links")
 
@@ -46,9 +71,10 @@ async def run():
                     print(f"⚠️ Skipping job {i+1}, invalid href: {href}")
                     continue
 
-                full_url = f"https://www.se.com.au{href}"
+                full_url = f"https://www.seek.com.au{href}"
                 job_page = await context.new_page()
-                await job_page.goto(full_url, timeout=20000)
+
+                await job_page.goto(full_url, wait_until="domcontentloaded", timeout=20000)
                 await job_page.wait_for_selector('h1[data-automation="job-detail-title"]', timeout=10000)
                 await job_page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 await asyncio.sleep(1)
