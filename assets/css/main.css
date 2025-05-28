@@ -6437,3 +6437,7 @@ figcaption {
     }
   }
 }
+
+.job-details-wrapper {
+  background-color: white;
+}
