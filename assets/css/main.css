@@ -6398,3 +6398,42 @@ figcaption {
     display: none;
   }
 }
+
+@media (max-width: 500px) {
+  .mobile-card-section-fix {
+    min-height: 0px !important;
+    height: 90vh !important;
+  }
+  .padding-top-mobile-fix {
+    padding-top: 0rem !important;
+  }
+}
+@media (max-width: 768px) {
+  .carousel-wrapper {
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+  }
+
+  .carousel-track {
+    display: flex;
+    width: max-content;
+    animation: scrollCarousel 15s linear infinite;
+  }
+
+  .card-img {
+    flex: 0 0 auto;
+    width: 80vw; /* adjust as needed */
+    margin-right: 1rem;
+    border-radius: 12px;
+  }
+
+  @keyframes scrollCarousel {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
