@@ -6369,3 +6369,6 @@ figcaption {
   max-height: calc(1.4em * 3);
   margin-bottom: 1rem;
 }
+.border-left-fix {
+  border-left-width: 1px !important;
+}
