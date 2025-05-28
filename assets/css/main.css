@@ -3156,6 +3156,7 @@ figcaption {
 
 .section_bank-card {
   overflow: hidden;
+  min-height: 110vh;
 }
 
 .section_banner-image {
@@ -6368,4 +6369,29 @@ figcaption {
   line-height: 1.4;
   max-height: calc(1.4em * 3);
   margin-bottom: 1rem;
+}
+@media (max-width: 768px) {
+  .bank_card-spline {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem !important;
+    padding: 1rem;
+  }
+
+  .bank_card-spline img {
+    flex: 0 0 auto;
+    width: 80%;
+    max-width: 300px;
+    height: auto;
+    scroll-snap-align: center;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .bank_card-spline::-webkit-scrollbar {
+    display: none;
+  }
 }

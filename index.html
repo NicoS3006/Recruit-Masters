@@ -347,7 +347,7 @@
             </div>
           </div>
         </section>
-        <section class="section_text">
+        <section class="section_text" style="padding-bottom: 3%;">
           <div class="padding-global">
             <div class="container-large">
               <div class="padding-section-large">
@@ -445,7 +445,7 @@
             </div>
           </div>
         </header>
-        <section class="section_text background-color-secondary" style="padding-bottom: 3%;">
+        <section class="section_text background-color-secondary" style="padding-bottom: 3%; padding-top: 3%;">
           <div class="padding-global">
             <div class="container-large">
               <div class="padding-section-large">
@@ -650,5 +650,34 @@
       src="assets/js/main.js"
       type="text/javascript"
     ></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) return;
+
+        const slider = document.querySelector(".bank_card-spline");
+        if (!slider) return;
+
+        let scrollAmount = 0;
+        const images = slider.querySelectorAll("img");
+        if (images.length === 0) return;
+
+        const cardWidth = images[0].offsetWidth;
+        const gap = parseInt(getComputedStyle(slider).gap || 16, 10);
+
+        setInterval(() => {
+          scrollAmount += cardWidth + gap;
+
+          if (scrollAmount + slider.clientWidth >= slider.scrollWidth) {
+            scrollAmount = 0;
+          }
+
+          slider.scrollTo({
+            left: scrollAmount,
+            behavior: "smooth"
+          });
+        }, 3000); // change every 3 seconds
+      });
+    </script>
   </body>
 </html>
