@@ -455,6 +455,68 @@
             </div>
           </div>
         </section>
+        <style>
+          #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 9999;
+            left: 50%;
+            bottom: 50px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.4s, visibility 0.4s;
+          }
+          #toast.show {
+            visibility: visible;
+            opacity: 1;
+          }
+        </style>
+        <div id="toast"></div>
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('wf-form-Contact-5-Form');
+            const toast = document.getElementById('toast');
+        
+            form.addEventListener('submit', function (event) {
+              event.preventDefault();
+        
+              const formData = new FormData(form);
+              const url = form.action;
+        
+              fetch(url, {
+                method: 'POST',
+                body: formData
+              })
+              .then(response => response.text())
+              .then(data => {
+                // Clear all form fields
+                form.reset();
+        
+                // Show toast notification
+                showToast('Thank you! Your message has been sent.');
+              })
+              .catch(error => {
+                showToast('There was an error. Please try again.');
+              });
+            });
+        
+            function showToast(message) {
+              toast.textContent = message;
+              toast.className = 'show';
+              setTimeout(function(){
+                toast.className = toast.className.replace('show', '');
+              }, 3500);
+            }
+          });
+        </script>
+        
       </main>
       <footer class="footer">
         <div class="padding-global">
