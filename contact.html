@@ -497,6 +497,16 @@
         </style>
         <div id="toast"></div>
         <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            if (window.Webflow && window.Webflow.require) {
+              try {
+                var forms = window.Webflow.require('forms');
+                if (forms) forms.ready = function() {};
+              } catch(e) {}
+            }
+          });
+        </script>        
+        <script>
           document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('wf-form-Contact-5-Form');
             const toast = document.getElementById('toast');
