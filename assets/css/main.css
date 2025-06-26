@@ -6289,8 +6289,7 @@ figcaption {
 .footer_logo {
   height: 1rem;
   width: auto;
-  transform: translate(0px, 0.6px);
-  scale: 4;
+  transform: translateX(-31%);
   margin: 0;
   padding: 0;
   vertical-align: middle;
