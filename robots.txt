@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+Disallow: /assets/documents/Privacy-Policy.pdf
+Disallow: /assets/documents/Website-Terms&Conditions.pdf
+
 Sitemap: https://recruitmasters.com.au/sitemap.xml
